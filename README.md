@@ -1,4 +1,4 @@
-# BipBuffer
+# Bipbuffer
 
 A safe, efficient bipbuffer implementation perfect for high-throughput network I/O, memcache servers, and streaming.
 
@@ -147,7 +147,7 @@ let data2 = buffer.read(); // Returns "12" (Region B)
 buffer.consume(2)?;
 ```
 
-## Acknowledgments
+### 👏 Acknowledgments
 
 - Inspired by the original [bipbuffer concept](https://www.codeproject.com/Articles/3479/The-Bip-Buffer-The-Circular-Buffer-with-a-Twist) by Simon Cooke
 - Inspired by [bipbuffer crate](https://www.codeproject.com/Articles/3479/The-Bip-Buffer-The-Circular-Buffer-with-a-Twist)
