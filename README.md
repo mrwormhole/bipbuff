@@ -1,4 +1,4 @@
-# Bipbuffer
+# Bipbuf
 
 A safe, efficient bipbuffer implementation perfect for high-throughput network I/O, memcache servers, and streaming.
 
