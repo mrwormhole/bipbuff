@@ -17,8 +17,8 @@ pub enum BipBufferError {
 
 /// Bipbuffer allows efficient circular buffering without data copying.
 #[derive(Debug)]
-pub struct BipBuffer {
-    buffer: Vec<u8>,
+pub struct BipBuffer<T> {
+    buffer: Vec<T>,
     capacity: usize,
 
     // Region A (primary data region)
@@ -33,11 +33,14 @@ pub struct BipBuffer {
     reserve_size: usize,
 }
 
-impl BipBuffer {
+impl<T> BipBuffer<T>
+where
+    T: Copy + PartialEq + Default,
+{
     /// Create a new bipbuffer with the specified capacity
     pub fn new(capacity: usize) -> Self {
         Self {
-            buffer: vec![0; capacity],
+            buffer: vec![T::default(); capacity],
             capacity,
             a_start: 0,
             a_end: 0,
@@ -75,7 +78,7 @@ impl BipBuffer {
     ///
     /// Returns a mutable slice where you can write data.
     /// Must call `commit()` afterwards to make the data available for reading.
-    pub fn reserve(&mut self, size: usize) -> Result<&mut [u8], BipBufferError> {
+    pub fn reserve(&mut self, size: usize) -> Result<&mut [T], BipBufferError> {
         if size == 0 {
             return Ok(&mut []);
         }
@@ -144,7 +147,7 @@ impl BipBuffer {
     /// Write data directly to the buffer
     ///
     /// This is a convenience method that combines reserve() and commit().
-    pub fn write(&mut self, data: &[u8]) -> Result<(), BipBufferError> {
+    pub fn write(&mut self, data: &[T]) -> Result<(), BipBufferError> {
         if data.is_empty() {
             return Ok(());
         }
@@ -159,7 +162,7 @@ impl BipBuffer {
     ///
     /// Returns the first contiguous block of data.
     /// May need to call multiple times to read all data due to wrapping.
-    pub fn read(&self) -> &[u8] {
+    pub fn read(&self) -> &[T] {
         if self.a_start < self.a_end {
             // Return data from region A
             &self.buffer[self.a_start..self.a_end]
@@ -214,7 +217,7 @@ impl BipBuffer {
     }
 
     /// Read and consume data in one operation
-    pub fn read_and_consume(&mut self, size: usize) -> Result<Vec<u8>, BipBufferError> {
+    pub fn read_and_consume(&mut self, size: usize) -> Result<Vec<T>, BipBufferError> {
         let mut result = Vec::with_capacity(size);
         let mut remaining = size;
 
@@ -238,7 +241,7 @@ impl BipBuffer {
     }
 
     /// Copy all available data into a new Vec
-    pub fn read_all(&self) -> Vec<u8> {
+    pub fn read_all(&self) -> Vec<T> {
         let mut result = Vec::with_capacity(self.len());
 
         // Read from region A
@@ -255,7 +258,7 @@ impl BipBuffer {
     }
 
     /// Peek at data without consuming it
-    pub fn peek(&self, size: usize) -> Vec<u8> {
+    pub fn peek(&self, size: usize) -> Vec<T> {
         let mut result = Vec::with_capacity(size.min(self.len()));
         let mut remaining = size;
 
@@ -316,7 +319,7 @@ impl BipBuffer {
     }
 
     /// Find the first occurrence of a byte pattern
-    pub fn find(&self, pattern: &[u8]) -> Option<usize> {
+    pub fn find(&self, pattern: &[T]) -> Option<usize> {
         if pattern.is_empty() {
             return Some(0);
         }
@@ -328,7 +331,7 @@ impl BipBuffer {
     }
 
     /// Create an iterator over all bytes in the buffer
-    pub fn iter(&self) -> impl Iterator<Item = u8> + '_ {
+    pub fn iter(&self) -> impl Iterator<Item = T> + '_ {
         let a_iter = self.buffer[self.a_start..self.a_end].iter().copied();
         let b_iter = self.buffer[0..self.b_end].iter().copied();
         a_iter.chain(b_iter)
